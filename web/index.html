@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<!-- inline background so the page paints dark from the very first parse,
+     before any stylesheet or flutter loads - avoids a white flash. -->
+<html style="background-color:#121318">
+<head>
+  <!--
+    placeholder for the base href, replaced by the `--base-href` argument to
+    `flutter build web`. it has to start and end with a slash.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <!-- without this, mobile browsers lay out at ~980px and scale down, so
+       everything (e.g. the loading spinner) renders tiny. -->
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description"
+    content="direct peer-to-peer file transfer over veilid">
+  <!-- a share link carries its token in the url fragment; never leak the
+       page url to anything the page loads. -->
+  <meta name="referrer" content="no-referrer">
+
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="mudita">
+  <meta name="theme-color" content="#121318">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>mudita</title>
+  <link rel="manifest" href="manifest.json">
+
+  <style>
+    /* loading splash shown until the flutter app has started. */
+    #mudita-splash {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      background: #121318;
+      color: #e6e6e6;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    #mudita-splash .spinner {
+      width: 56px;
+      height: 56px;
+      border: 5px solid rgba(255, 255, 255, 0.2);
+      border-top-color: #3584e4;
+      border-radius: 50%;
+      animation: mudita-spin 0.9s linear infinite;
+    }
+    #mudita-splash .label {
+      font-size: 16px;
+      letter-spacing: 0.02em;
+      opacity: 0.85;
+    }
+    @keyframes mudita-spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body style="background-color:#121318">
+  <!-- splash covers engine init, then is removed once the flutter app
+       starts. -->
+  <div id="mudita-splash">
+    <div class="spinner"></div>
+    <div class="label" id="mudita-splash-label">loading mudita...</div>
+  </div>
+  <!--
+    the app itself loads the mudita core (web/wasm/mudita.js, made by
+    `make core-wasm`), which runs a full veilid node in the page; see
+    lib/core/core_web.dart. here the flutter loader is only driven by hand so
+    that the splash stays up until the app has started.
+  -->
+  <script type="module">
+    {{flutter_js}}
+    {{flutter_build_config}}
+
+    _flutter.loader.load({
+      onEntrypointLoaded: async function (engineInitializer) {
+        const appRunner = await engineInitializer.initializeEngine();
+        await appRunner.runApp();
+        document.getElementById('mudita-splash')?.remove();
+      }
+    });
+  </script>
+</body>
+</html>

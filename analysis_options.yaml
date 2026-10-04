@@ -1,0 +1,16 @@
+# static analysis config; run with `flutter analyze`.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    # the python e2e suite and the rust cli hold no dart; exclude them so the
+    # analyzer never walks their venvs and build output.
+    - test/e2e/**
+    - cli/**
+
+linter:
+  rules:
+    # named constructor parameters cannot be private initializing formals
+    # (`this._field`), so dependency-injected classes use `_field = param`.
+    # that idiom is exactly what this lint flags, so it is turned off here.
+    prefer_initializing_formals: false

@@ -1,0 +1,46 @@
+[package]
+name = "mudita-wasm"
+description = "the mudita core for a web page: one engine, driven from javascript"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# cdylib is what becomes the wasm blob; rlib lets the workspace's native
+# checks and tests build the crate too.
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+mudita-core = { path = "../core" }
+serde_json.workspace = true
+tracing.workspace = true
+# the page is handed the core's log lines by a subscriber layer; the
+# registry is the least of this crate that carries one. already in the tree
+# through veilid-core.
+tracing-subscriber = { version = "0.3.23", default-features = false, features = [
+    "registry",
+] }
+# the bindings to javascript, as veilid's own wasm build uses them and at
+# its versions: the blob and the `wasm-bindgen` tool that writes its glue
+# must be of one release (see scripts/build_core_wasm.sh).
+wasm-bindgen = "=0.2.121"
+wasm-bindgen-futures = "0.4.58"
+js-sys = "0.3.83"
+web-sys = { version = "0.3.83", features = ["File", "Blob"] }
+# a page has one thread, so its values are never sent anywhere, but the
+# core's tasks ask for `Send`. this is how veilid squares the two as well.
+send_wrapper = { version = "0.6.0", features = ["futures"] }
+# a panic is otherwise an unreadable "unreachable executed" in the console.
+console_error_panic_hook = "0.1.7"
+
+# for the node's config; the same release and features the core builds with.
+[target.'cfg(not(all(target_arch = "wasm32", target_os = "unknown")))'.dependencies]
+veilid-core = { version = "=0.5.7", default-features = false, features = [
+    "default-tokio",
+] }
+
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
+veilid-core = { version = "=0.5.7", default-features = false, features = [
+    "default-wasm",
+] }

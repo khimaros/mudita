@@ -1,0 +1,37 @@
+[package]
+name = "mudita"
+description = "send and fetch files directly between peers over veilid"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+mudita-core = { path = "../core" }
+# for the hash that names a file's kept leaves; already in the tree.
+blake3 = "1.8.3"
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+# the command line's own runtime: veilid-core runs on it natively, and it
+# gives `serve` its control socket ("net", "io-util") and signals. the core
+# itself does not use it.
+tokio = { version = "1.49.0", features = [
+    "rt-multi-thread",
+    "macros",
+    "net",
+    "io-util",
+    "signal",
+    "sync",
+    "time",
+] }
+# the formatter for status lines with a timestamp and a level on stderr.
+# features are the minimum for the fmt layer.
+tracing-subscriber = { version = "0.3.23", default-features = false, features = [
+    "fmt",
+] }
+# for the node's config and the log field mapper; the same release the core
+# is pinned to.
+veilid-core = { version = "=0.5.7", default-features = false, features = [
+    "default-tokio",
+] }

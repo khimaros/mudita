@@ -1,0 +1,21 @@
+# the rust side of mudita: `core/` is the protocol and everything that speaks
+# it, built for any runtime; `cli/` is the `mudita` command line around it.
+[workspace]
+resolver = "2"
+members = ["core", "cli", "wasm"]
+
+[workspace.package]
+version = "0.0.1"
+edition = "2021"
+rust-version = "1.89.0"
+publish = false
+
+[workspace.dependencies]
+# the manifest and the control protocol are json. both are already in
+# veilid-core's dependency tree.
+serde = { version = "1.0.218", features = ["derive"] }
+serde_json = "1.0.149"
+# the standard rust logging facade. veilid-core logs through it, so it is
+# already in the tree, and sharing one subscriber is what lets RUST_LOG show
+# veilid's own events next to ours.
+tracing = { version = "0.1.44", default-features = false, features = ["std"] }

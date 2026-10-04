@@ -1,0 +1,8 @@
+[tools]
+# flutter drives the linux/web builds; dart ships inside it. pin the bare
+# version (no "-stable" suffix): newer mise appends the channel itself.
+flutter = "3.44.6"
+# rust builds the cli, the veilid native library (ffi), and the wasm blob.
+rust = "1.97.0"
+# uv runs the python end-to-end tests.
+uv = "0.11.25"

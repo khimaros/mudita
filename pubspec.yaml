@@ -1,0 +1,45 @@
+name: mudita
+description: "direct peer-to-peer file transfer over the veilid network."
+publish_to: 'none'
+
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # part of the flutter sdk, not a third-party package. needed for one call:
+  # turning off flutter's own use of the url fragment on web, which would
+  # otherwise overwrite the share token in the address bar (see lib/main.dart).
+  flutter_web_plugins:
+    sdk: flutter
+
+  # the app has no network code of its own: the mudita core (rust, in core/)
+  # does all of it, as a wasm module on web and as the `mudita serve` process
+  # on desktop. so there is no veilid dependency here.
+
+  # choosing a file to share, a folder to share, and where to save a
+  # download have no dart/flutter standard-library route on desktop, so a
+  # plugin is unavoidable. this is the first-party flutter one.
+  file_selector: ^1.0.3
+
+  # the dart team's bindings for browser apis. the web build hands browser
+  # File objects to the core and saves a finished download through them.
+  web: ^1.1.1
+
+  # the dart team's standard logging package. the core's log lines are
+  # passed through it, so the app's log shows exactly what the cli prints.
+  logging: ^1.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # the recommended flutter lint set, activated in analysis_options.yaml.
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

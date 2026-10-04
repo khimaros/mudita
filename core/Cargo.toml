@@ -1,0 +1,51 @@
+[package]
+name = "mudita-core"
+description = "the mudita protocol and everything that speaks it, for any runtime"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# the library is called mudita, not mudita_core, so that what it logs is
+# logged under `mudita::peer`, `mudita::fetch` and so on, whichever program
+# it runs in.
+[lib]
+name = "mudita"
+
+[dependencies]
+# the vld0 hash is plain blake3; veilid-core already depends on this crate, so
+# using it directly keeps hashing synchronous without adding to the tree.
+blake3 = "1.8.3"
+# a share's record is owned by a keypair derived from the file, and veilid has
+# no call that turns a secret key into its public key. veilid-core already
+# depends on this crate at this version, with these features.
+ed25519-dalek = { version = "=3.0.0", default-features = false }
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+# what the core runs its tasks with instead of a runtime of its own, so that
+# it builds for the browser as well: channels, locks, wakeups, and ways to
+# run futures side by side. all four are in veilid-tools' dependency tree at
+# these versions; timers and task spawning come from veilid-tools itself.
+async-lock = "3.4.2"
+event-listener = "5.4.2"
+flume = "0.12.0"
+futures-util = { version = "0.3.34", default-features = false, features = [
+    "std",
+    "async-await",
+    "async-await-macro",
+] }
+
+# pinned to one release, the same for the native and the web builds, so
+# every client speaks the same network protocol. default features are trimmed to
+# drop the debug command interface and backtraces; which runtime veilid runs
+# on follows the target.
+[target.'cfg(not(all(target_arch = "wasm32", target_os = "unknown")))'.dependencies]
+veilid-core = { version = "=0.5.7", default-features = false, features = [
+    "default-tokio",
+] }
+
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
+veilid-core = { version = "=0.5.7", default-features = false, features = [
+    "default-wasm",
+] }
