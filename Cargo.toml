@@ -1,5 +1,5 @@
 # the rust side of mudita: `core/` is the protocol and everything that speaks
-# it, built for any runtime; `cli/` is the `mudita` command line around it.
+# it, built for any runtime; `cli/` is the `dana` command line around it.
 [workspace]
 resolver = "2"
 members = ["core", "cli", "wasm"]

@@ -2,12 +2,15 @@
 cmake_minimum_required(VERSION 3.13)
 project(runner LANGUAGES CXX)
 
-# The name of the executable created for the application. Change this to change
-# the on-disk name of your application.
-set(BINARY_NAME "mudita")
+# this one runner builds both linux apps, bindu and mudita. the makefile names
+# the binary in each bundle; flutter reads this line, so it stays a literal.
+set(BINARY_NAME "app")
 # The unique GTK application identifier for this application. See:
 # https://wiki.gnome.org/HowDoI/ChooseApplicationID
 set(APPLICATION_ID "com.khimaros.mudita")
+if(DEFINED ENV{MUDITA_APP_ID})
+  set(APPLICATION_ID "$ENV{MUDITA_APP_ID}")
+endif()
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.

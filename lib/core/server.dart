@@ -1,4 +1,4 @@
-// the app's link to `mudita serve`, the library server (DESIGN.md "the
+// the app's link to `dana serve`, the library server (DESIGN.md "the
 // server and its remote control"). the app holds no veilid node of its own
 // when it shows the library: it starts the server if none is running and
 // asks it for everything over the control socket, newline-delimited json.
@@ -19,7 +19,7 @@ const String _kSocketEnv = 'MUDITA_SOCKET';
 const String _kBinaryEnv = 'MUDITA_SERVER';
 // the server binary ships beside the app under this name, because the app's
 // own binary is already called mudita.
-const String _kBundledBinary = 'mudita-server';
+const String _kBundledBinary = 'dana';
 const String _kGone = 'the server went away';
 const String _kNotStarted = 'the server did not start';
 

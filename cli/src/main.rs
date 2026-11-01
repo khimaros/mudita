@@ -1,5 +1,6 @@
-//! mudita command line: send and fetch files directly between peers over
-//! veilid. see DESIGN.md for the protocol. everything that speaks it is in
+//! dana, mudita's command line and server: send, fetch and serve files
+//! directly between peers over veilid. see DESIGN.md for the protocol.
+//! everything that speaks it is in
 //! the core (`core/`); this is the shell around it: arguments, logging,
 //! files on disk, and the server's socket.
 
@@ -26,30 +27,31 @@ use tracing_subscriber::Layer;
 use veilid_core::FmtStripVeilidFields;
 
 const USAGE: &str = "usage:
-  mudita send <file>                       share a file until interrupted
-  mudita fetch <link-or-token> [-o <path>] download a shared file
-  mudita serve [--config <path>]           share the folders in the config
-                                           file until interrupted
-commands for a running `mudita serve`:
-  mudita status                            what it shares and downloads, and
-                                           its libraries with a link each
-  mudita library add <name> [--listed]     a new library, reached by its
-                                           link alone unless it is listed.
-                                           nothing tells others which
-                                           libraries are one server's
-  mudita library share <name> <folder>     share a folder in a library
-  mudita library unshare <name> <folder>   stop sharing a folder of one
-  mudita library rename <name> <new-name>  call one something else
-  mudita library list <name>               have searches find one
-  mudita library unlist <name>             have one reached by its link only
-  mudita library remove <name>             stop sharing one
-  mudita search <words...>                 find files in other libraries
-  mudita browse <library-link>             list what a library shares
-  mudita download <number|link-or-token>   download a search result, by its
-                                           number, or a shared file
-  mudita rescan                            look for changes in its folders
-  mudita uploads                           who is downloading from it, and
-                                           how far each has got
+  dana send <file>                       share a file until interrupted
+  dana fetch <link-or-token> [-o <path>] download a shared file
+  dana serve [--config <path>]           share the folders in the config
+                                         file until interrupted
+commands for a running `dana serve`:
+  dana status                            what it shares and downloads, and
+                                         its libraries with a link each
+  dana library add <name> [--discoverable]
+                                         a new library, reached by its
+                                         link alone unless discoverable.
+                                         nothing tells others which
+                                         libraries are one server's
+  dana library share <name> <folder>     share a folder in a library
+  dana library unshare <name> <folder>   stop sharing a folder of one
+  dana library rename <name> <new-name>  call one something else
+  dana library set <name> --discoverable have searches find one
+  dana library set <name> --link-only    have one reached by its link only
+  dana library remove <name>             stop sharing one
+  dana search <words...>                 find files in other libraries
+  dana browse <library-link>             list what a library shares
+  dana download <number|link-or-token>   download a search result, by its
+                                         number, or a shared file
+  dana rescan                            look for changes in its folders
+  dana uploads                           who is downloading from it, and
+                                         how far each has got
 `serve` and the commands for it take --socket <path> to use a control
 socket other than the default. `serve --attached` stops when the program
 that started it exits. `serve --no-library` shares no folders and keeps
@@ -65,8 +67,9 @@ const ATTACHED_FLAG: &str = "--attached";
 // through, by the control methods, and no library: no config, no folders,
 // nothing kept between runs.
 const NO_LIBRARY_FLAG: &str = "--no-library";
-// for `library add`: a library that searches find from the start.
-const LISTED_FLAG: &str = "--listed";
+// for `library add` and `library set`: whether searches find a library.
+const DISCOVERABLE_FLAG: &str = "--discoverable";
+const LINK_ONLY_FLAG: &str = "--link-only";
 
 // for timing downloads at other settings than the default.
 const CONCURRENCY_ENV: &str = "MUDITA_CONCURRENCY";
@@ -76,10 +79,11 @@ const TEST_SLOTS_ENV: &str = "MUDITA_TEST_SLOTS";
 const TEST_PROBE_ENV: &str = "MUDITA_TEST_PROBE";
 
 const LOG_ENV: &str = "RUST_LOG";
-// our own events show at info unless RUST_LOG says otherwise. veilid's targets
-// are its facility names (net, rpc, ...), which no default directive matches,
-// so veilid stays quiet until RUST_LOG asks for it.
-const OWN_LOG_DIRECTIVE: &str = "mudita=info";
+// our own events show at info unless RUST_LOG says otherwise: the core logs
+// as mudita and this program as dana. veilid's targets are its facility names
+// (net, rpc, ...), which no default directive matches, so veilid stays quiet
+// until RUST_LOG asks for it.
+const OWN_LOG_DIRECTIVES: [&str; 2] = ["mudita=info", "dana=info"];
 
 enum Command {
     Send(PathBuf),
@@ -101,7 +105,7 @@ fn take_option(args: &mut Vec<&str>, name: &str) -> Result<Option<PathBuf>> {
     Ok(Some(args.remove(at).into()))
 }
 
-/// what `mudita library ...` asks: a change to the node's libraries.
+/// what `dana library ...` asks: a change to the node's libraries.
 fn parse_arrange(args: &[&str]) -> Result<client::Arrange> {
     use client::Arrange;
     let owned = |text: &str| text.to_owned();
@@ -110,7 +114,7 @@ fn parse_arrange(args: &[&str]) -> Result<client::Arrange> {
             name: owned(name),
             listed: false,
         },
-        ["add", name, LISTED_FLAG] | ["add", LISTED_FLAG, name] => Arrange::Add {
+        ["add", name, DISCOVERABLE_FLAG] | ["add", DISCOVERABLE_FLAG, name] => Arrange::Add {
             name: owned(name),
             listed: true,
         },
@@ -119,9 +123,10 @@ fn parse_arrange(args: &[&str]) -> Result<client::Arrange> {
             name: owned(name),
             to: owned(to),
         },
-        [listing @ ("list" | "unlist"), name] => Arrange::Listed {
+        ["set", name, flag @ (DISCOVERABLE_FLAG | LINK_ONLY_FLAG)]
+        | ["set", flag @ (DISCOVERABLE_FLAG | LINK_ONLY_FLAG), name] => Arrange::Listed {
             name: owned(name),
-            listed: listing == "list",
+            listed: flag == DISCOVERABLE_FLAG,
         },
         ["share", name, folder] => Arrange::Share {
             name: owned(name),
@@ -183,7 +188,8 @@ fn parse_args(args: &[&str]) -> Result<Command> {
 /// which events reach stderr: ours at info, then whatever `spec` adds or
 /// overrides in RUST_LOG syntax (`debug`, `net=debug,mudita=warn`).
 fn log_filter(spec: &str) -> Result<Targets> {
-    let directives: Vec<&str> = std::iter::once(OWN_LOG_DIRECTIVE)
+    let directives: Vec<&str> = OWN_LOG_DIRECTIVES
+        .into_iter()
         .chain(spec.split(','))
         .map(str::trim)
         .filter(|directive| !directive.is_empty())
@@ -443,9 +449,16 @@ mod tests {
             name: name.clone(),
             listed: true,
         };
-        let asked = ["library", "add", "tunes", "--listed", "--socket", "/s"];
+        let asked = [
+            "library",
+            "add",
+            "tunes",
+            "--discoverable",
+            "--socket",
+            "/s",
+        ];
         assert_eq!(parsed(&asked), Some(listed));
-        assert_eq!(parsed(&["library", "add", "tunes", "--unlisted"]), None);
+        assert_eq!(parsed(&["library", "add", "tunes", "--listed"]), None);
         assert_eq!(
             parsed(&["library", "remove", "tunes"]),
             Some(Arrange::Remove(name.clone()))
@@ -458,11 +471,15 @@ mod tests {
             parsed(&["library", "rename", "tunes", "my music"]),
             Some(renamed)
         );
-        for (word, listed) in [("list", true), ("unlist", false)] {
+        for (flag, listed) in [("--discoverable", true), ("--link-only", false)] {
             let name = name.clone();
             let expected = Arrange::Listed { name, listed };
-            assert_eq!(parsed(&["library", word, "tunes"]), Some(expected));
+            assert_eq!(parsed(&["library", "set", "tunes", flag]), Some(expected));
         }
+        // what used to make a library public must not read as a listing.
+        assert_eq!(parsed(&["library", "list", "tunes"]), None);
+        assert_eq!(parsed(&["library", "unlist", "tunes"]), None);
+        assert_eq!(parsed(&["library", "set", "tunes"]), None);
         let folder = "/music".to_owned();
         let shared = Arrange::Share {
             name: name.clone(),
@@ -494,6 +511,13 @@ mod tests {
         assert!(filter.would_enable("mudita::seed", &Level::INFO));
         assert!(filter.would_enable("mudita", &Level::ERROR));
         assert!(!filter.would_enable("mudita::seed", &Level::DEBUG));
+    }
+
+    #[test]
+    fn this_programs_own_events_show_at_info_too() {
+        let filter = log_filter("").unwrap();
+        assert!(filter.would_enable(env!("CARGO_CRATE_NAME"), &Level::INFO));
+        assert!(filter.would_enable(env!("CARGO_CRATE_NAME"), &Level::ERROR));
     }
 
     #[test]

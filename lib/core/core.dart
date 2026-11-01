@@ -5,7 +5,7 @@
 // sharing, the downloading and the logging.
 //
 // where the core runs depends on the platform: in the browser it is a wasm
-// module in the page; on a desktop it is a `mudita serve` process reached
+// module in the page; on a desktop it is a `dana serve` process reached
 // over its socket. both are driven the same way.
 
 import 'core_io.dart' if (dart.library.js_interop) 'core_web.dart';

@@ -1,4 +1,4 @@
-//! the mudita core in a web page: one engine, the same one `mudita serve`
+//! the mudita core in a web page: one engine, the same one `dana serve`
 //! runs, driven from javascript. a page shares the files its user picks,
 //! downloads into the browser's own storage, and for everything else speaks
 //! the control protocol (the core's control.rs) through `call`, as a client

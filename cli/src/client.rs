@@ -1,4 +1,4 @@
-//! the commands that drive a running `mudita serve` over its control
+//! the commands that drive a running `danaserve` over its control
 //! socket: `status`, `search`, `download` and `rescan`. they start no node of
 //! their own, which is what makes them quick.
 
@@ -57,9 +57,7 @@ impl Client {
         let path = socket_path(&process_env, socket);
         let stream = UnixStream::connect(&path).map_err(|_| {
             let path = path.display();
-            format!(
-                "no server is running (nothing answers at {path}); start one with `mudita serve`"
-            )
+            format!("no server is running (nothing answers at {path}); start one with `danaserve`")
         })?;
         Ok(Client {
             stream: BufReader::new(stream),
@@ -96,7 +94,7 @@ fn format_download(download: &Download) -> String {
     )
 }
 
-/// one of the node's libraries as `mudita status` shows it: what it is
+/// one of the node's libraries as `danastatus` shows it: what it is
 /// called and how far it is shared, then its folders, then its link once it
 /// has one.
 fn format_library(library: &LibraryStatus) -> Vec<String> {
@@ -106,16 +104,20 @@ fn format_library(library: &LibraryStatus) -> Vec<String> {
         shared,
         ..
     } = library;
-    let listed = if library.listed { "listed" } else { "unlisted" };
+    let reached = if library.listed {
+        "discoverable"
+    } else {
+        "link only"
+    };
     let mut lines = vec![format!(
-        "  {name} ({listed}, {files} files, {shared} shared)"
+        "  {name} ({reached}, {files} files, {shared} shared)"
     )];
     lines.extend(library.folders.iter().map(|folder| format!("    {folder}")));
     lines.extend(library.link.iter().map(|link| format!("    link: {link}")));
     lines
 }
 
-/// the node's libraries, as `mudita status` and `mudita library` show them.
+/// the node's libraries, as `danastatus` and `danalibrary` show them.
 fn format_libraries(libraries: &[LibraryStatus]) -> Vec<String> {
     let shown = libraries.iter().flat_map(format_library);
     std::iter::once("libraries:".to_owned())
@@ -123,7 +125,7 @@ fn format_libraries(libraries: &[LibraryStatus]) -> Vec<String> {
         .collect()
 }
 
-/// what `mudita status` prints.
+/// what `danastatus` prints.
 fn format_status(status: &Status, downloads: &[Download]) -> String {
     let mut lines = vec![format!(
         "ready: {}",
@@ -144,8 +146,8 @@ fn format_status(status: &Status, downloads: &[Download]) -> String {
     lines.join("\n")
 }
 
-/// what `mudita search` prints: the results numbered from 1, for
-/// `mudita download <number>`.
+/// what `danasearch` prints: the results numbered from 1, for
+/// `danadownload <number>`.
 fn format_results(results: &SearchResults) -> String {
     let asked = format!("asked {} libraries", results.asked);
     if results.results.is_empty() {
@@ -191,7 +193,7 @@ fn download_params(wanted: &str, last: impl FnOnce() -> Result<SearchResults>) -
     Ok(json!({"file": hit.file}))
 }
 
-/// what `mudita uploads` prints: a line for each download someone is making
+/// what `danauploads` prints: a line for each download someone is making
 /// from this server, or has made: the file, the library it is in if it is
 /// in one, and how far the download has got or how it ended.
 fn format_uploads(uploads: &[Upload]) -> String {
@@ -213,7 +215,7 @@ fn format_uploads(uploads: &[Upload]) -> String {
     uploads.iter().map(line).collect::<Vec<_>>().join("\n")
 }
 
-/// one line of `mudita browse`: where the file is and how big.
+/// one line of `danabrowse`: where the file is and how big.
 fn format_file(file: &FileEntry) -> String {
     let FileEntry {
         folder, name, size, ..
@@ -315,7 +317,7 @@ pub fn run(command: Command, socket: Option<PathBuf>) -> Result<()> {
             let params = download_params(&wanted, || client.call("search.last", nothing()))?;
             let started: Value = client.call("download", params)?;
             format!(
-                "download {} started; `mudita status` shows its progress",
+                "download {} started; `danastatus` shows its progress",
                 started["download"]
             )
         }
@@ -441,7 +443,7 @@ mod tests {
             ..Default::default()
         };
         let printed = format_status(&status, &[running, failed]);
-        let expected = "ready: yes\nlibraries:\n  tunes (listed, 5 files, 4 shared)\n    /music\n    /more\n    link: http://x/#library/VLD0%3At%3As\n  downloads (unlisted, 0 files, 0 shared)\n    /d\ndownloads to: /d\nfiles: 5 (4 shared)\nlibraries discovered: 2\nuploading: 1\ndownloads:\n  1  a.iso  3/4 pieces  downloading\n  2  (looking up)  0/? pieces  error: no peers";
+        let expected = "ready: yes\nlibraries:\n  tunes (discoverable, 5 files, 4 shared)\n    /music\n    /more\n    link: http://x/#library/VLD0%3At%3As\n  downloads (link only, 0 files, 0 shared)\n    /d\ndownloads to: /d\nfiles: 5 (4 shared)\nlibraries discovered: 2\nuploading: 1\ndownloads:\n  1  a.iso  3/4 pieces  downloading\n  2  (looking up)  0/? pieces  error: no peers";
         assert_eq!(printed, expected);
         let waiting = Status {
             ready: false,
@@ -529,7 +531,7 @@ mod tests {
         let unused = || -> Result<SearchResults> { panic!("no search is needed for a link") };
         let link = "http://veilid.tech/mudita/#library/VLD0%3Aabc%3Adef";
         let refused = download_params(link, unused).unwrap_err();
-        assert!(refused.to_string().contains("mudita browse"));
+        assert!(refused.to_string().contains("dana browse"));
         let unused = || -> Result<SearchResults> { panic!("no search is needed for a link") };
         assert!(download_params("library/VLD0:abc:def", unused).is_err());
     }

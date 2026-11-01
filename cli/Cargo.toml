@@ -1,6 +1,6 @@
 [package]
-name = "mudita"
-description = "send and fetch files directly between peers over veilid"
+name = "dana"
+description = "send, fetch and serve files directly between peers over veilid"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

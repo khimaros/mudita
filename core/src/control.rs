@@ -1,5 +1,5 @@
 //! the remote control of an engine: what is said over the unix socket of
-//! `mudita serve`, and to the engine a web page runs (the wasm crate).
+//! `dana serve`, and to the engine a web page runs (the wasm crate).
 //! newline-delimited json, one connection carrying any number of requests.
 //! `{"id":1,"method":"status","params":{}}` is answered by
 //! `{"id":1,"result":{...}}` or `{"id":1,"error":"..."}`. the cli's own

@@ -1,8 +1,8 @@
-// the entrypoint of mudita with dana, its library, for linux desktop: it
-// shares whole folders and browses and searches what other libraries share.
-// the library itself is `mudita serve`; this is its window, which starts a
+// the entrypoint of mudita, the full desktop app, for linux: it shares
+// whole folders and browses and searches what other libraries share. the
+// libraries themselves are `dana serve`; this is its window, which starts a
 // server when none is running (DESIGN.md "the server and its remote
-// control"). run with `flutter run -t lib/dana/main.dart`.
+// control"). run with `flutter run -t lib/desktop/main.dart`.
 
 import 'package:flutter/material.dart';
 

@@ -20,7 +20,7 @@ it:
 
 - `core/` - the protocol, sharing, downloading, the library, the logging:
   everything that is the same wherever it runs, built on veilid-core.
-- `cli/` - the `mudita` command line, which is the core on a desktop or a
+- `cli/` - `dana`, the command line, which is the core on a desktop or a
   server.
 - `wasm/` - the core for a web page, where it runs a full veilid node in the
   browser.
@@ -354,15 +354,14 @@ file is saved, so it does not serve yet.
 ### libraries
 
 a library is a peer that shares many files at once and can be browsed and
-searched. mudita's library is called dana, and it is the cli's `serve`
-command (see "the server and its remote control"). bindu, the one-file app,
-and the cli's `send` and `fetch` share one file at a time and answer the
-requests below with an error, which a library takes to mean "not a
-library".
+searched. libraries are kept by `dana serve` (see "the server and its
+remote control"). bindu, the mini app, and dana's `send` and `fetch` share
+one file at a time and answer the requests below with an error, which a
+library takes to mean "not a library".
 
 a library serves every file over one route and holds a slot in each file's
 record, with bit 1 of the slot flags set. its files are therefore ordinary
-shares: each has a link, and the cli and mudita download them and join their
+shares: each has a link, and dana and the apps download them and join their
 swarms without knowing a library is involved. (one server shares any number
 of such libraries: see "a node's libraries".)
 
@@ -444,7 +443,7 @@ for another, so a query cannot be amplified through the network.
 
 #### a node's libraries
 
-one `mudita serve` shares any number of libraries: each a name of its
+one `dana serve` shares any number of libraries: each a name of its
 owner's choosing over one or more folders, with every shared folder in
 exactly one. the folder downloads are saved to is in one too, called
 "downloads" until it is renamed. a library is listed, which is to be found
@@ -523,7 +522,7 @@ of that library, is a library of its own now.
   files (choose a file and share it, share one dropped on the app, download
   to where the user says, hand a finished download over, discard one). it
   has two forms. on a desktop
-  (`core_io.dart`, `server.dart`) the core is a `mudita serve` process
+  (`core_io.dart`, `server.dart`) the core is a `dana serve` process
   reached over its socket, and files are paths. in a browser
   (`core_web.dart`) it is the wasm module loaded into the page, files are
   browser File objects, and a download waits in the browser's storage
@@ -575,8 +574,8 @@ of that library, is a library of its own now.
     failed, until it is dismissed, and dismissing one discards its
     download in the core. a link the app was opened with, or one that
     arrives while it is open, brings this side forward. a link to a
-    library opens it under the card, in the browser the library's window
-    has (`LibraryBrowser`, below), without what belongs to a list of
+    library opens it under the card, in the browser the desktop app has
+    (`LibraryBrowser`, below), without what belongs to a list of
     libraries: the way starts at the library, there is no arrow back, and
     an x closes it. a file picked out of it is downloaded at once and
     shows among the transfers. another library link takes its place.
@@ -585,8 +584,8 @@ of that library, is a library of its own now.
   holds the one share, the list of received files, and other people's
   downloads from the core.
 - `e2e/` - the `window.muditaTest` hook, compiled in only for e2e builds.
-- `dana/` - the library's window, for linux desktop
-  (`lib/dana/main.dart`). `LibraryModel` follows the server's state by
+- `desktop/` - mudita, the full desktop app, for linux
+  (`lib/desktop/main.dart`). `LibraryModel` follows the server's state by
   asking again every two seconds, and passes on what the user asks for;
   every control method the window uses is named in `library_model.dart`.
   a file is downloaded once at a time, wherever it is asked for: the model
@@ -653,14 +652,17 @@ of that library, is a library of its own now.
     its name in it.
 
 on linux bindu starts a server of its own (`serve --no-library`, on a
-socket private to that run) and the library's window uses the user's
-library server, starting it if none is running. android and ios have no
+socket private to that run) and the desktop app uses the user's library
+server, starting it if none is running. android and ios have no
 core yet: they would need it as a native library.
 
-mudita is one app under two names used only in the code and these docs,
-never on screen: bindu ("a drop") is the one-file form, on every platform,
-and stays small: one file is sent at a time, and files are received one by one. dana ("giving") is the library.
-features that go beyond one file are built in dana.
+mudita ("sympathetic joy") is the project and its full desktop app. bindu
+("a drop") is the mini app, on every platform, and stays small: one file is
+sent at a time, and files are received one by one. features that go beyond
+one file are built in mudita. dana ("giving") is the command line and the
+server both linux apps run on. the two linux apps are one flutter project
+and one runner: the makefile gives each bundle its binary name and, through
+`MUDITA_APP_ID`, its application id.
 
 the rust side is a cargo workspace at the repo root.
 
@@ -675,14 +677,14 @@ the rust side is a cargo workspace at the repo root.
   from and go to (`Source`, `Sink`, `Sinks`), where small state is kept
   (`StateStore`), and what a library's folders hold (`Host`). that is what
   lets the same code run in a browser.
-- `cli/` (the `mudita` binary) is the native embedder: arguments, the log
+- `cli/` (the `dana` binary) is the native embedder: arguments, the log
   subscriber, the unix socket, signals, config and state files, and
   folders on `std::fs`. `send`, `fetch` and `serve` all run on the engine;
   the first two as a fresh node with throwaway storage.
 
 ## the server and its remote control
 
-`mudita serve` is dana: a long-standing server (see "libraries") that
+`dana serve` is a long-standing server (see "libraries") that
 shares the folders named in its config file, as the libraries set out
 there, and downloads on request. it keeps its veilid node and its leaf
 hashes between runs, so a restart neither changes its identity on the
@@ -690,7 +692,9 @@ network nor reads every file again.
 
 the config file sets out the libraries (see "a node's libraries"):
 `{"downloads": "<folder>", "libraries": [{"name": "<chosen>", "folders":
-["..."], "listed": true}]}`. `listed` may be left out, and is then false.
+["..."], "discoverable": true}]}`. `discoverable` (`listed` in a file from
+before, and everywhere in the control methods) may be left out, and is then
+false.
 names are unique, not empty and without `/`,
 and a folder is in one library. the download folder is in one of them:
 where it is in none, a library "downloads" is made for it, unlisted. a
@@ -708,7 +712,7 @@ mudita.sock` (under the state directory when that is unset; `--socket` or
 `MUDITA_SOCKET` overrides it). the socket is bound before the node attaches,
 so a client connects within a second of the server starting and sees
 `"ready": false` until the network is usable. every cli command but `send`,
-`fetch` and `serve` is a client of it, and so is the library's window,
+`fetch` and `serve` is a client of it, and so is the desktop app,
 which is why they answer in the time of one request: the node is already
 up.
 
@@ -748,7 +752,7 @@ gave that file, the most common first, with `name` the first of them.
 | `browse` | `library` (an id) or `link` (a library link), and `offset` | `total`, `library` (its name), `files`: one catalog page |
 | `search.start` | `query` | `search`: an id |
 | `search.poll` | `search` | `asked`, `done`, `results`: files with `sources`, and `libraries`, what the libraries that have the file are called (those that have a name) |
-| `search.last` | | as `search.poll`, for the most recent search; how `mudita download <number>` finds its file |
+| `search.last` | | as `search.poll`, for the most recent search; how `dana download <number>` finds its file |
 | `download` | `file` or `token` (a link or token), and optionally `name` (what to save it as, over any name in the link) and `path` (native: save exactly there) | `download`: an id |
 | `lookup` | `link` | `token`, `size`, `root`, `name` (from the link, else the most common in the slots, else empty), `names` (every distinct name the peers in the slots give, most common first) |
 | `shares` | | `shares`: each `id`, `name`, `size`, `state` (`hashing`, `publishing`, `shared`, `error`), `progress`, `served`, `token`, `link` (the share link with the name in it), `error`, and `downloads`: who is downloading the file from here or has been, oldest first, each `id` (the 16 hex characters the log calls it by), `done` and `total` (pieces), `state` (`downloading`, `finished`, or `gone` for one not heard from for `DOWNLOAD_GONE`), `started` and `seen` (unix seconds of its first and its latest notice). it is what the downloaders' own notices say and no more (see "download notices"): one whose notices were lost is missing or behind, one heard from again after `gone` starts over, and of those that have ended the last 64 are kept, until the share is stopped |
@@ -791,7 +795,8 @@ the cli logs `link: <url>` and `saved <path>`, all at INFO.
   writing to stderr. a line is an rfc 3339 utc timestamp, the level, the
   module, and the message:
   `2026-10-03T21:29:43.512345Z  INFO mudita::peer: download 3f9a1c0e7b2d4a68 started (1 active)`.
-  mudita's own events show at INFO and above. veilid-core logs through
+  our own events show at INFO and above: the core's under `mudita::`, and
+  what `cli/` itself logs under `dana`. veilid-core logs through
   `tracing` too, under targets named after its facilities (`net`, `rpc`,
   ...), and stays silent until `RUST_LOG` asks for it in the usual
   `target=level` syntax: `RUST_LOG=debug` for all of veilid,

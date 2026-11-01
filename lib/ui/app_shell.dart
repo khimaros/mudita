@@ -1,6 +1,6 @@
-// what both of mudita's entrypoints, bindu (one file) and dana (the
-// library), set up alike before showing their own screens: the root logger
-// and the look. the look is one set of measures, named here so that no
+// what both apps' entrypoints, bindu (one file) and mudita (the full
+// desktop app), set up alike before showing their own screens: the root
+// logger and the look. the look is one set of measures, named here so that no
 // widget carries a number of its own.
 
 import 'package:flutter/foundation.dart';

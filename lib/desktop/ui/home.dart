@@ -1,4 +1,4 @@
-// the window of mudita with dana, its library: a bar with the transfers
+// the window of mudita, the full desktop app: a bar with the transfers
 // button and whether the server is connected, a switch between searching,
 // other people's libraries, downloads, and the user's own libraries, the
 // cards of the side that is showing, and the log in a bar along the bottom.

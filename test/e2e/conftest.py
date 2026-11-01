@@ -19,7 +19,7 @@ import pytest
 from playwright.sync_api import Page, sync_playwright
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-CLI = Path(os.environ.get("MUDITA_CLI", REPO_ROOT / "target/release/mudita"))
+CLI = Path(os.environ.get("MUDITA_CLI", REPO_ROOT / "target/release/dana"))
 # attaching a fresh node and publishing a record can take a couple of minutes.
 PUBLISH_TIMEOUT_SECONDS = 240
 FETCH_TIMEOUT_SECONDS = 600
@@ -28,7 +28,7 @@ STOP_TIMEOUT_SECONDS = 30
 LOG_TIMEOUT_SECONDS = 60
 LOG_POLL_SECONDS = 0.5
 SERVER_POLL_SECONDS = 2
-# every line `mudita send` logs about its downloaders: an rfc 3339 utc
+# every line `danasend` logs about its downloaders: an rfc 3339 utc
 # timestamp, the level, and the module that logged it.
 LOG_PREFIX = r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d+Z +INFO mudita::peer: "
 STARTED_LOG = LOG_PREFIX + r"download ([0-9a-f]{16}) started \(1 active\)$"
@@ -58,8 +58,8 @@ READY_TIMEOUT_MS = 240_000
 TRANSFER_TIMEOUT_MS = 600_000
 # links are made for the hosted app; only what follows the '#' matters here.
 WEB_LINK_BASE = "http://veilid.tech/mudita/#"
-# the link `mudita send` logs, which says what the file is called there.
-LINK_LOG = r"INFO mudita: link: (\S+)$"
+# the link `danasend` logs, which says what the file is called there.
+LINK_LOG = r"INFO dana: link: (\S+)$"
 
 
 def link_for(token: str, name: str = "") -> str:
@@ -70,7 +70,7 @@ def link_for(token: str, name: str = "") -> str:
 
 
 class CliSeeder:
-    """a `mudita send` process sharing one file until stopped."""
+    """a `danasend` process sharing one file until stopped."""
 
     def __init__(self, path: Path, tag: str = "send", slots: int | None = None):
         # the tag keeps the logs of two senders of one file apart.
@@ -87,7 +87,7 @@ class CliSeeder:
                 env=os.environ | narrowed,
             )
         self.token = self.process.stdout.readline().strip()
-        assert self.token, "mudita send exited without printing a share token"
+        assert self.token, "dana send exited without printing a share token"
 
     def link(self) -> str:
         """the share link the sender logged, with the file's name in it."""
@@ -99,7 +99,7 @@ class CliSeeder:
         self.process.wait(timeout=STOP_TIMEOUT_SECONDS)
 
     def wait_for_log(self, pattern: str) -> re.Match:
-        """wait for a line `mudita send` logs about its downloaders."""
+        """wait for a line `danasend` logs about its downloaders."""
         deadline = time.monotonic() + LOG_TIMEOUT_SECONDS
         while time.monotonic() < deadline:
             if match := re.search(pattern, self.log_path.read_text(), re.MULTILINE):
@@ -118,7 +118,7 @@ class CliSeeder:
 def cli_fetch(
     link: str, dest: Path | None = None, cwd: Path | None = None
 ) -> subprocess.CompletedProcess:
-    """run `mudita fetch`; its log is in the result's stderr, and echoed.
+    """run `danafetch`; its log is in the result's stderr, and echoed.
 
     without `dest` the file is saved in `cwd`, under whatever name the link
     or the file's peers give it.
@@ -137,7 +137,7 @@ def cli_fetch(
 
 
 class Server:
-    """a `mudita serve` process with a home, state and control socket of its own."""
+    """a `danaserve` process with a home, state and control socket of its own."""
 
     def __init__(self, home: Path, config: dict, plain: bool = False):
         """`config` is the server's config file, in the old shape or the new."""
@@ -369,7 +369,7 @@ def browser():
 
 @pytest.fixture
 def servers(tmp_path):
-    """starts `mudita serve` processes on demand and stops them afterwards."""
+    """starts `danaserve` processes on demand and stops them afterwards."""
     started = []
 
     def start(
@@ -398,7 +398,7 @@ def servers(tmp_path):
                 {
                     "name": called,
                     "folders": [str(folder / inside) for inside in one["folders"]],
-                    **({"listed": one["listed"]} if "listed" in one else {}),
+                    **({"discoverable": one["listed"]} if "listed" in one else {}),
                 }
                 for called, one in libraries.items()
             ]

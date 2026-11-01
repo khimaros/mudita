@@ -1,4 +1,4 @@
-//! where `mudita serve` keeps things, and its config file: the folders it
+//! where `dana serve` keeps things, and its config file: the folders it
 //! shares and where it saves downloads. paths follow the xdg directories;
 //! the environment is passed in so that all of it is pure.
 

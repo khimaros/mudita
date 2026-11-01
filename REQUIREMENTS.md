@@ -20,7 +20,7 @@ product owner.
   completes with exactly the shared bytes or fails; it never yields a
   silently corrupted file.
 - **R4 command line.** a file can be shared and downloaded from a terminal
-  with the `mudita` command.
+  with the `dana` command.
 - **R5 app.** a file can be shared and downloaded from the app, including in
   a normal desktop browser with no install.
 - **R6 interoperability.** the command line and the app speak the same

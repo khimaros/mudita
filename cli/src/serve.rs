@@ -1,7 +1,7 @@
-//! `mudita serve`: a long-standing library. the library itself is the
+//! `danaserve`: a long-standing library. the library itself is the
 //! core's engine; this is what makes it a server on this machine: its
 //! config file and the folders in it, its state directory, and the unix
-//! socket it is driven over by the other `mudita` commands and by the
+//! socket it is driven over by the other `dana` commands and by the
 //! desktop app (see the core's control.rs for what is said there).
 
 use crate::config::{default_config_path, process_env, shown, socket_path, state_dir, Config};
@@ -124,7 +124,7 @@ async fn lock_state(state: &Path) -> Result<File> {
     while lock.try_lock().is_err() {
         if Instant::now() >= deadline {
             let state = state.display();
-            return Err(format!("another `mudita serve` is already using {state}").into());
+            return Err(format!("another `danaserve` is already using {state}").into());
         }
         tokio::time::sleep(LOCK_RETRY).await;
     }

@@ -61,7 +61,7 @@ const NAMES_WAIT: Duration = Duration::from_secs(10);
 const NAMES_GRACE: Duration = Duration::from_millis(1500);
 /// what asking for a library as if it were one file is answered with.
 pub const LIBRARY_LINK: &str = "that is a link to a library, not to a file; \
-    `mudita browse <link>` lists what it shares";
+    `dana browse <link>` lists what it shares";
 
 /// whether a peer that has not said which peers it knows, after `attempt`
 /// tries, is asked once more: not for ever, and not once it has been dropped.

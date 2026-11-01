@@ -1,4 +1,4 @@
-// a stand-in for `mudita serve`: listens on a unix socket in a temp
+// a stand-in for `dana serve`: listens on a unix socket in a temp
 // directory and answers the control protocol from the canned state of a
 // `FakeLibrary`, which also records what it was asked.
 
@@ -24,7 +24,7 @@ class FakeServer {
   String get path => '${_directory.path}/mudita.sock';
 
   static Future<FakeServer> start() async {
-    final directory = Directory.systemTemp.createTempSync('mudita-server-');
+    final directory = Directory.systemTemp.createTempSync('dana-');
     final address = InternetAddress(
       '${directory.path}/mudita.sock',
       type: InternetAddressType.unix,

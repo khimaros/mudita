@@ -12,8 +12,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:logging/logging.dart';
 import 'package:mudita/core/log_history.dart';
-import 'package:mudita/dana/library_model.dart';
-import 'package:mudita/dana/ui/home.dart';
+import 'package:mudita/desktop/library_model.dart';
+import 'package:mudita/desktop/ui/home.dart';
 import 'package:mudita/ui/app_shell.dart';
 
 import '../fakes/fake_library.dart';
@@ -24,7 +24,7 @@ const String _kOut = 'docs/screenshots';
 
 // the window as it is on a desktop, drawn at twice its size so that the
 // pictures stay sharp on a dense screen.
-const Size _kWindow = Size(1280, 800);
+const Size _kWindow = Size(970, 800);
 const double _kPixelRatio = 2;
 
 // flutter's tests draw every letter as a box unless given fonts: the ones
@@ -270,7 +270,7 @@ void main() {
     await settle(tester);
   }
 
-  // the window as lib/dana/main.dart sets it up, over the staged server,
+  // the window as lib/desktop/main.dart sets it up, over the staged server,
   // with the log saying what such a server would have.
   Future<void> open(WidgetTester tester) async {
     tester.view.physicalSize = _kWindow;
@@ -301,7 +301,7 @@ void main() {
     await settle(tester);
   }
 
-  // write what the window shows to `dana-<name>.png`, then take the window
+  // write what the window shows to `desktop-<name>.png`, then take the window
   // down, so that the model stops asking before the test ends.
   Future<void> shoot(WidgetTester tester, String name) async {
     final shot = tester.renderObject<RenderRepaintBoundary>(find.byKey(_kShot));
@@ -309,7 +309,9 @@ void main() {
       final image = await shot.toImage(pixelRatio: _kPixelRatio);
       final png = await image.toByteData(format: ui.ImageByteFormat.png);
       image.dispose();
-      File('$_kOut/dana-$name.png').writeAsBytesSync(png!.buffer.asUint8List());
+      File(
+        '$_kOut/desktop-$name.png',
+      ).writeAsBytesSync(png!.buffer.asUint8List());
     });
     await tester.pumpWidget(const SizedBox.shrink());
     model.dispose();

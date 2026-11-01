@@ -5,7 +5,7 @@
 // neither app's model. reading someone else's library takes no library of
 // one's own. the rows and the head it is made of are here for the list of
 // libraries too, which the library's window puts above it
-// (lib/dana/ui/library_list.dart).
+// (lib/desktop/ui/library_list.dart).
 
 import 'dart:async';
 

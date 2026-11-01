@@ -27,8 +27,9 @@ pub struct Owned {
     pub folders: Vec<String>,
     /// whether it holds a slot in the lobby, where a search finds it. one
     /// that is not listed is reached by its link alone, which is how every
-    /// library starts out unless its owner says otherwise.
-    #[serde(default)]
+    /// library starts out unless its owner says otherwise. a config says
+    /// `discoverable`; one from before says `listed`.
+    #[serde(default, rename = "discoverable", alias = "listed")]
     pub listed: bool,
 }
 
@@ -383,6 +384,14 @@ mod tests {
         let listed = r#"{"name": "a", "folders": ["/x"], "listed": true}"#;
         let parsed: Owned = serde_json::from_str(listed).unwrap();
         assert_eq!(parsed, library("a", &["/x"], true));
+    }
+
+    #[test]
+    fn a_config_says_discoverable_and_one_from_before_says_listed() {
+        let written = r#"{"name":"a","folders":["/x"],"discoverable":true}"#;
+        let parsed: Owned = serde_json::from_str(written).unwrap();
+        assert_eq!(parsed, library("a", &["/x"], true));
+        assert_eq!(serde_json::to_string(&parsed).unwrap(), written);
     }
 
     #[test]

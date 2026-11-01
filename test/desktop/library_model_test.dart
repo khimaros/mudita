@@ -11,8 +11,8 @@ import 'package:mudita/core/core_io.dart';
 import 'package:mudita/core/server.dart';
 import 'package:mudita/core/types.dart' show RemoteFile;
 import 'package:mudita/core/file_tree.dart';
-import 'package:mudita/dana/labels.dart';
-import 'package:mudita/dana/library_model.dart';
+import 'package:mudita/desktop/labels.dart';
+import 'package:mudita/desktop/library_model.dart';
 
 import '../fakes/fake_server.dart';
 

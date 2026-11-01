@@ -18,7 +18,7 @@ dependencies:
     sdk: flutter
 
   # the app has no network code of its own: the mudita core (rust, in core/)
-  # does all of it, as a wasm module on web and as the `mudita serve` process
+  # does all of it, as a wasm module on web and as the `dana serve` process
   # on desktop. so there is no veilid dependency here.
 
   # choosing a file to share, a folder to share, and where to save a

@@ -1,4 +1,4 @@
-// the core on a desktop: a `mudita serve` process, reached over its control
+// the core on a desktop: a `dana serve` process, reached over its control
 // socket. files are named by path here, so sharing one is telling the
 // server where it is, and a download is saved straight to where the user
 // says.

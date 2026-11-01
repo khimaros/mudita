@@ -2,7 +2,7 @@
 //! once, shared like any single file (it has a link, and `fetch` and the
 //! app can download it), and listed in the catalog of the library it is
 //! in, which others browse and search. which files those are, and in which
-//! library each is, is the embedder's to say: `mudita serve` lists the
+//! library each is, is the embedder's to say: `dana serve` lists the
 //! folders in its config. every library is one of its own to the network
 //! (DESIGN.md "a node's libraries"), with its files served over its own
 //! peer, and nothing there says which libraries are one node's.

@@ -614,6 +614,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "dana"
+version = "0.0.1"
+dependencies = [
+ "blake3",
+ "mudita-core",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "veilid-core",
+]
+
+[[package]]
 name = "darling"
 version = "0.21.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1836,20 +1850,6 @@ dependencies = [
  "smallvec",
  "tagptr",
  "uuid",
-]
-
-[[package]]
-name = "mudita"
-version = "0.0.1"
-dependencies = [
- "blake3",
- "mudita-core",
- "serde",
- "serde_json",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "veilid-core",
 ]
 
 [[package]]

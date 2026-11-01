@@ -2,7 +2,7 @@
 //! whoever embeds the core. with libraries to share (DESIGN.md "libraries")
 //! it shares what its host lists, each library as one of its own, meets
 //! other people's libraries, downloads on request, and answers the control
-//! methods of control.rs, which is all of `mudita serve` but its socket.
+//! methods of control.rs, which is all of `dana serve` but its socket.
 //! without them it is the node `send` and `fetch` run on, and what a
 //! browser shares and downloads single files with.
 

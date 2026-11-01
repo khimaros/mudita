@@ -1,4 +1,4 @@
-"""`mudita serve` libraries and their remote control, over the live veilid network."""
+"""`dana serve` libraries and their remote control, over the live veilid network."""
 
 import json
 import os
@@ -55,8 +55,8 @@ def test_status_shows_what_a_server_shares(servers):
     # a config from when a server had one library: it is that library still,
     # called what its folder is, and downloads have one that no search finds.
     assert "libraries:" in status.stdout
-    assert "  shared (listed, 2 files, 2 shared)" in status.stdout
-    assert "  downloads (unlisted, 0 files, 0 shared)" in status.stdout
+    assert "  shared (discoverable, 2 files, 2 shared)" in status.stdout
+    assert "  downloads (link only, 0 files, 0 shared)" in status.stdout
     assert all(file["library"] == "shared" for file in shared)
 
 
@@ -75,7 +75,7 @@ def test_a_library_link_lists_the_library_by_folder(servers):
     named = alice.run("library", "rename", "shared", "the shelf")
     assert named.returncode == 0, named.stderr
     status = alice.run("status").stdout.splitlines()
-    at = status.index("  the shelf (listed, 2 files, 2 shared)")
+    at = status.index("  the shelf (discoverable, 2 files, 2 shared)")
     link = status[at + 2].removeprefix("    link: ")
     assert link.startswith(LIBRARY_LINK_BASE)
     assert link.removeprefix(LIBRARY_LINK_BASE) == token.replace(":", "%3A")
@@ -322,13 +322,13 @@ def test_only_listed_libraries_are_found_by_a_search(servers):
 
     assert bob.wait_for("the listed file", lambda: found({offered})) == {offered}
     # switched to listed while it runs, the other is found as well.
-    listed = alice.run("library", "list", vault)
+    listed = alice.run("library", "set", vault, "--discoverable")
     assert listed.returncode == 0, listed.stderr
-    assert f"  {vault} (listed, 1 files, 1 shared)" in listed.stdout
+    assert f"  {vault} (discoverable, 1 files, 1 shared)" in listed.stdout
     bob.wait_for("the library now listed", lambda: in_lobby(vault))
     bob.wait_for("both files", lambda: found({offered, kept}))
-    unlisted = alice.run("library", "unlist", stall)
-    assert f"  {stall} (unlisted, 1 files, 1 shared)" in unlisted.stdout
+    unlisted = alice.run("library", "set", stall, "--link-only")
+    assert f"  {stall} (link only, 1 files, 1 shared)" in unlisted.stdout
 
 
 def test_every_link_of_a_server_outlives_a_restart_and_a_renaming(servers):
@@ -339,7 +339,7 @@ def test_every_link_of_a_server_outlives_a_restart_and_a_renaming(servers):
     assert set(links) == {"tunes", "downloads"}
     renamed = alice.run("library", "rename", "tunes", "my music")
     assert renamed.returncode == 0, renamed.stderr
-    assert "  my music (listed" in renamed.stdout
+    assert "  my music (discoverable" in renamed.stdout
     kept = {"my music": links["tunes"], "downloads": links["downloads"]}
     assert alice.wait_for_links() == kept
     alice.stop()
@@ -356,7 +356,7 @@ def test_every_link_of_a_server_outlives_a_restart_and_a_renaming(servers):
     assert alice.run("library", "add", "extra").returncode == 0
     shared = alice.run("library", "share", "extra", str(extra))
     assert shared.returncode == 0, shared.stderr
-    assert "  extra (unlisted" in shared.stdout
+    assert "  extra (link only" in shared.stdout
     files = {file["name"]: file["library"] for file in alice.wait_until_shared(2)}
     assert files == {"a.bin": "my music", "b.bin": "extra"}
     assert alice.wait_for_links()["extra"] not in kept.values()
@@ -409,7 +409,7 @@ def test_the_library_from_before_keeps_its_link(servers):
     assert catalog["library"] == "the shelf"
     assert places(catalog) == [("", "a.bin"), ("", "c.bin")]
     # the next change writes the config as it is now, and the link stays.
-    assert alice.run("library", "unlist", "the shelf").returncode == 0
+    assert alice.run("library", "set", "the shelf", "--link-only").returncode == 0
     assert "folders" not in json.loads(alice.config.read_text())
     alice.stop()
     alice.start()

@@ -7,6 +7,11 @@
 
 #include "flutter/generated_plugin_registrant.h"
 
+// the size a window opens at, which the pictures in README.md are drawn at
+// too (test/screenshots/desktop.dart).
+static const gint kDefaultWidth = 970;
+static const gint kDefaultHeight = 800;
+
 struct _MyApplication {
   GtkApplication parent_instance;
   char** dart_entrypoint_arguments;
@@ -62,7 +67,7 @@ static void my_application_activate(GApplication* application) {
     gtk_window_set_icon_from_file(window, icon, nullptr);
   }
 
-  gtk_window_set_default_size(window, 1280, 720);
+  gtk_window_set_default_size(window, kDefaultWidth, kDefaultHeight);
 
   g_autoptr(FlDartProject) project = fl_dart_project_new();
   fl_dart_project_set_dart_entrypoint_arguments(
